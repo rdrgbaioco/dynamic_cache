@@ -82,7 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
+        onPressed: () async {
           context.cache.update<int>('counter', (value) => value + 1);
         },
         tooltip: 'Increment',

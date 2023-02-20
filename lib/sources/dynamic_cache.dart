@@ -21,22 +21,22 @@ abstract class DynamicCacheInterface
 
   /// Try to get a value from the cache by key.
   /// if the key is not in the cache, will be created.
-  T getOrCreate<T>(
+  Future<T> getOrCreate<T>(
     String key, {
-    required T Function() tryFunc,
+    required Future<T> Function() createValue,
+    Duration expiration = const Duration(seconds: 60),
+  });
+
+  /// Try to get a value from the cache by key.
+  /// if the key is not in the cache, will be created sync.
+  T getOrCreateSync<T>(
+    String key, {
+    required T createValue,
     Duration expiration = const Duration(seconds: 60),
   });
 
   /// Get a first (if there is more than one) value from the cache by type.
   T? getByType<T>();
-
-  /// Get a first (if there is more than one) value from the cache by type.
-  /// if is not in the cache, will be created.
-  T getByTypeOrCreate<T>(
-    String key, {
-    required T Function() tryFunc,
-    Duration expiration = const Duration(seconds: 60),
-  });
 
   /// Remove a key from the cache.
   void remove(String key);
@@ -102,18 +102,33 @@ class DynamicCache extends DynamicCacheInterface {
   }
 
   @override
-  T getOrCreate<T>(
+  Future<T> getOrCreate<T>(
     String key, {
-    required T Function() tryFunc,
+    required Future<T> Function() createValue,
+    Duration expiration = const Duration(seconds: 60),
+  }) async {
+    if (contains(key)) {
+      return await _cache[key] as T;
+    } else {
+      final value = await createValue();
+      create(key, value, expiration: expiration);
+      _notifyListeners();
+      return value;
+    }
+  }
+
+  @override
+  T getOrCreateSync<T>(
+    String key, {
+    required T createValue,
     Duration expiration = const Duration(seconds: 60),
   }) {
     if (contains(key)) {
       return _cache[key] as T;
     } else {
-      final result = tryFunc();
-      create(key, result, expiration: expiration);
+      create(key, createValue, expiration: expiration);
       _notifyListeners();
-      return result;
+      return createValue;
     }
   }
 
@@ -123,22 +138,6 @@ class DynamicCache extends DynamicCacheInterface {
       return _cache.values.whereType<T>().first;
     }
     return null;
-  }
-
-  @override
-  T getByTypeOrCreate<T>(
-    String key, {
-    required T Function() tryFunc,
-    Duration expiration = const Duration(seconds: 60),
-  }) {
-    if (contains(key)) {
-      return _cache[key] as T;
-    } else {
-      final result = tryFunc();
-      create(key, result, expiration: expiration);
-      _notifyListeners();
-      return result;
-    }
   }
 
   @override
