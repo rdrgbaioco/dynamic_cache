@@ -42,7 +42,7 @@ abstract class DynamicCacheInterface
   void remove(String key);
 
   /// Remove all keys from the cache and notify listeners.
-  void clean();
+  void clear();
 }
 
 class DynamicCache extends DynamicCacheInterface {
@@ -174,7 +174,7 @@ class DynamicCache extends DynamicCacheInterface {
   }
 
   @override
-  void clean() {
+  void clear() {
     _cache.clear();
     for (final timer in _timers.keys) {
       _timers[timer]?.cancel();
