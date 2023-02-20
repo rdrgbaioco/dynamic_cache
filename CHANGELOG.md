@@ -1,4 +1,7 @@
-### 0.0.5
+### 0.0.6
+* Update: readme.
+
+#### 0.0.5
 
 * Removed: get or create method by type.
 

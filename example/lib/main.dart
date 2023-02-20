@@ -7,7 +7,7 @@ void main() {
     /// Note: specifying the cache is optional, as it will
     /// create one if it does not receive the parameter.
     const DynamicCacheProvider(
-      cache: DynamicCache(),
+      cache: DynamicCache.instance,
       child: MyApp(),
     ),
   );

@@ -46,7 +46,7 @@ abstract class DynamicCacheInterface
 }
 
 class DynamicCache extends DynamicCacheInterface {
-  const DynamicCache();
+  DynamicCache();
   const DynamicCache._() : super();
 
   /// Get a [DynamicCache] instance.
@@ -143,6 +143,7 @@ class DynamicCache extends DynamicCacheInterface {
   @override
   void remove(String key) {
     _cache.remove(key);
+    _timers[key]?.cancel();
     _notifyListeners();
   }
 
