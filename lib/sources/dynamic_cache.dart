@@ -1,13 +1,14 @@
 import 'dart:async';
+import 'dart:collection';
 import 'package:flutter/foundation.dart';
 
-abstract class DynamicCacheInterface
+abstract final interface class IDynamicCache
     extends ValueListenable<Map<String, dynamic>> {
-  const DynamicCacheInterface();
+  const IDynamicCache();
 
   /// Add a key/value pair to the cache, if the key is not already in the cache.
   /// Specify the duration of the cache entry (default 30 seconds).
-  void create(
+  void add(
     String key,
     dynamic value, {
     Duration expiration = const Duration(seconds: 30),
@@ -45,32 +46,40 @@ abstract class DynamicCacheInterface
   void clear();
 }
 
-class DynamicCache extends DynamicCacheInterface {
-  DynamicCache();
-  const DynamicCache._() : super();
+final class DynamicCache extends IDynamicCache {
+  /// Create a new [DynamicCache] instance.
+  const DynamicCache._();
 
   /// Get a [DynamicCache] instance.
   static const instance = DynamicCache._();
 
-  static final _cache = <String, dynamic>{};
-  static final _listeners = <void Function()>[];
-  static final _timers = <String, Timer>{};
+  static final HashMap<String, dynamic> _cache = HashMap<String, dynamic>();
+  static final HashMap<String, Timer> _timers = HashMap<String, Timer>();
+
+  static final _controller = StreamController<HashMap<String, dynamic>>.broadcast();
+  Stream<HashMap<String, dynamic>> get stream => _controller.stream;
+
+  static final List<void Function()> _listeners = [];
 
   @override
-  void create(
+  void add(
     String key,
     dynamic value, {
     bool autoRemove = true,
     Duration expiration = const Duration(seconds: 60),
     bool listen = true,
   }) {
+
     if (_cache.containsKey(key)) {
+      update(key, (oldValue) => value);
       return;
     }
     _cache[key] = value;
+
     if (autoRemove) {
       _autoRemove(key, expiration);
     }
+
     if (listen) {
       _notifyListeners();
     }
@@ -78,13 +87,13 @@ class DynamicCache extends DynamicCacheInterface {
 
   void update<T>(
     String key,
-    T Function(T oldValue)? update, {
+    T Function(T current)? update, {
     bool listen = true,
   }) {
     if (!_cache.containsKey(key)) {
       return;
     }
-    _cache.update(key, (oldValue) => update?.call(oldValue as T));
+    _cache.update(key, (current) => update?.call(current as T));
     if (listen) {
       _notifyListeners();
     }
@@ -103,16 +112,22 @@ class DynamicCache extends DynamicCacheInterface {
 
   @override
   Future<T> getOrCreate<T>(
-    String key, {
-    required Future<T> Function() createValue,
-    Duration expiration = const Duration(seconds: 60),
-  }) async {
+    String key,
+      {
+        required Future<T> Function() createValue,
+        Duration expiration = const Duration(seconds: 60),
+        bool listen = true,
+      }) async {
     if (contains(key)) {
       return await _cache[key] as T;
     } else {
       final value = await createValue();
-      create(key, value, expiration: expiration);
-      _notifyListeners();
+      add(key, value, expiration: expiration);
+
+      if (listen) {
+        _notifyListeners();
+      }
+
       return value;
     }
   }
@@ -126,7 +141,7 @@ class DynamicCache extends DynamicCacheInterface {
     if (contains(key)) {
       return _cache[key] as T;
     } else {
-      create(key, createValue, expiration: expiration);
+      add(key, createValue, expiration: expiration);
       _notifyListeners();
       return createValue;
     }
@@ -141,10 +156,12 @@ class DynamicCache extends DynamicCacheInterface {
   }
 
   @override
-  void remove(String key) {
+  void remove(String key, {bool listen = true}) {
     _cache.remove(key);
     _timers[key]?.cancel();
-    _notifyListeners();
+    if (listen) {
+      _notifyListeners();
+    }
   }
 
   void _autoRemove(String key, Duration expiration) {
@@ -168,6 +185,7 @@ class DynamicCache extends DynamicCacheInterface {
   Map<String, dynamic> get value => _cache;
 
   void _notifyListeners() {
+    _controller.add(_cache);
     for (final listener in _listeners) {
       listener();
     }
@@ -181,5 +199,10 @@ class DynamicCache extends DynamicCacheInterface {
       _timers.remove(timer);
     }
     _notifyListeners();
+  }
+
+  void dispose() {
+    clear();
+    _controller.close();
   }
 }

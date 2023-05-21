@@ -1,10 +1,10 @@
 name: dynamic_cache
-description: A complete in-memory cache in Flutter. Inspired by IMemoryCache (Microsoft.Extensions.Caching.Memory.) from C# .
-version: 0.0.6
+description: A complete in-memory cache in Flutter. Inspired by IMemoryCache from C# and Others tools.
+version: 1.0.1
 repository: https://github.com/rdrgbaioco/dynamic_cache
 
 environment:
-  sdk: '>=2.19.2 <3.0.0'
+  sdk: '>=3.0.0 <4.0.0'
   flutter: ">=1.17.0"
 
 dependencies:

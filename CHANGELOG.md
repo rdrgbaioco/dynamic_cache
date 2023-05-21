@@ -1,4 +1,14 @@
-### 0.0.6
+### 1.0.1
+
+### Breaking Changes
+
+* Need declare instance on `DynamicCacheProvider`, check the example.
+* Update: Add Stream for use in `StreamBuilder`.
+* Add extension on snapshot of `StreamBuilder` for get values of cache.
+* Removed option to create others instances.
+* Some changes from Dart 3!
+
+#### 0.0.6
 * Update: readme.
 
 #### 0.0.5
