@@ -10,11 +10,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
   void putToCache(XFile image) {
     final photoList = context.cache.get<List<XFile?>>('photoList');
     if (photoList == null) {
-      final photos =  <XFile?>[];
+      final photos = <XFile?>[];
       photos.add(image);
       context.cache.add(
         'photoList',
@@ -25,7 +24,8 @@ class _HomePageState extends State<HomePage> {
     } else {
       /// Add the image to the existing list
       context.cache.update<List<XFile?>>(
-        'photoList', (current) => [...current, image],
+        'photoList',
+        (current) => [...current, image],
       );
     }
   }

@@ -46,7 +46,7 @@ abstract final interface class IDynamicCache
   void clear();
 }
 
-final class DynamicCache extends IDynamicCache {
+final class DynamicCache implements IDynamicCache {
   /// Create a new [DynamicCache] instance.
   const DynamicCache._();
 
