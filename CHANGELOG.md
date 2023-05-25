@@ -1,3 +1,16 @@
+#### 1.0.3
+
+* Update examples.
+* Change `create` name functions to `add` for more consistently.
+
+#### 1.0.2
+
+* Fix the implementation again (because of lint warnings about new class modifiers).
+
+#### 1.0.1
+
+* Fix: class extension to implementation.
+
 ### 1.0.0
 
 ### Breaking Changes

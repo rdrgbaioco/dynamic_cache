@@ -10,9 +10,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  /// Add a key/value pair to the cache.
   void putToCache(XFile image) {
-    final photoList = context.cache.get<List<XFile?>>('photoList');
-    if (photoList == null) {
+    /// Check if the key is already in the cache
+    if (context.cache.contains('photoList')) {
       final photos = <XFile?>[];
       photos.add(image);
       context.cache.add(
@@ -22,7 +23,7 @@ class _HomePageState extends State<HomePage> {
         expiration: const Duration(seconds: 30),
       );
     } else {
-      /// Add the image to the existing list
+      /// Add the image to the existing list on cache
       context.cache.update<List<XFile?>>(
         'photoList',
         (current) => [...current, image],

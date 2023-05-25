@@ -24,8 +24,8 @@ class DynamicCacheProvider extends InheritedNotifier<DynamicCache> {
   final DynamicCache cache;
 
   static DynamicCache of(BuildContext context) {
-    final inherited = context
-        .dependOnInheritedWidgetOfExactType<DynamicCacheProvider>()!;
+    final inherited =
+        context.dependOnInheritedWidgetOfExactType<DynamicCacheProvider>()!;
     return inherited.notifier!;
   }
 }

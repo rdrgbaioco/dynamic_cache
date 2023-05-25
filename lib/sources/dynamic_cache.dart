@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'package:flutter/foundation.dart';
 
-abstract final interface class IDynamicCache
+abstract interface class IDynamicCache
     extends ValueListenable<Map<String, dynamic>> {
   const IDynamicCache();
 
@@ -11,7 +11,9 @@ abstract final interface class IDynamicCache
   void add(
     String key,
     dynamic value, {
-    Duration expiration = const Duration(seconds: 30),
+    bool autoRemove = true,
+    Duration expiration = const Duration(seconds: 60),
+    bool listen = true,
   });
 
   /// Verify if a key exists in the cache.
@@ -22,17 +24,17 @@ abstract final interface class IDynamicCache
 
   /// Try to get a value from the cache by key.
   /// if the key is not in the cache, will be created.
-  Future<T> getOrCreate<T>(
+  Future<T> getOrAdd<T>(
     String key, {
-    required Future<T> Function() createValue,
+    required Future<T> Function() addValue,
     Duration expiration = const Duration(seconds: 60),
   });
 
   /// Try to get a value from the cache by key.
   /// if the key is not in the cache, will be created sync.
-  T getOrCreateSync<T>(
+  T getOrAddSync<T>(
     String key, {
-    required T createValue,
+    required T addValue,
     Duration expiration = const Duration(seconds: 60),
   });
 
@@ -56,7 +58,8 @@ final class DynamicCache implements IDynamicCache {
   static final HashMap<String, dynamic> _cache = HashMap<String, dynamic>();
   static final HashMap<String, Timer> _timers = HashMap<String, Timer>();
 
-  static final _controller = StreamController<HashMap<String, dynamic>>.broadcast();
+  static final _controller =
+      StreamController<HashMap<String, dynamic>>.broadcast();
   Stream<HashMap<String, dynamic>> get stream => _controller.stream;
 
   static final List<void Function()> _listeners = [];
@@ -69,7 +72,6 @@ final class DynamicCache implements IDynamicCache {
     Duration expiration = const Duration(seconds: 60),
     bool listen = true,
   }) {
-
     if (_cache.containsKey(key)) {
       update(key, (oldValue) => value);
       return;
@@ -111,18 +113,24 @@ final class DynamicCache implements IDynamicCache {
   }
 
   @override
-  Future<T> getOrCreate<T>(
-    String key,
-      {
-        required Future<T> Function() createValue,
-        Duration expiration = const Duration(seconds: 60),
-        bool listen = true,
-      }) async {
+  Future<T> getOrAdd<T>(
+    String key, {
+    required Future<T> Function() addValue,
+    bool autoRemove = true,
+    Duration expiration = const Duration(seconds: 60),
+    bool listen = true,
+  }) async {
     if (contains(key)) {
       return await _cache[key] as T;
     } else {
-      final value = await createValue();
-      add(key, value, expiration: expiration);
+      final value = await addValue();
+      add(
+        key,
+        value,
+        autoRemove: autoRemove,
+        expiration: expiration,
+        listen: listen,
+      );
 
       if (listen) {
         _notifyListeners();
@@ -133,17 +141,25 @@ final class DynamicCache implements IDynamicCache {
   }
 
   @override
-  T getOrCreateSync<T>(
+  T getOrAddSync<T>(
     String key, {
-    required T createValue,
+    required T addValue,
+    bool autoRemove = true,
     Duration expiration = const Duration(seconds: 60),
+    bool listen = true,
   }) {
     if (contains(key)) {
       return _cache[key] as T;
     } else {
-      add(key, createValue, expiration: expiration);
+      add(
+        key,
+        addValue,
+        autoRemove: autoRemove,
+        expiration: expiration,
+        listen: listen,
+      );
       _notifyListeners();
-      return createValue;
+      return addValue;
     }
   }
 
