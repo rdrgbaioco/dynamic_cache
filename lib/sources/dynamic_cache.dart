@@ -27,7 +27,9 @@ abstract interface class IDynamicCache
   Future<T> getOrAdd<T>(
     String key, {
     required Future<T> Function() addValue,
+    bool autoRemove = true,
     Duration expiration = const Duration(seconds: 60),
+    bool listen = true,
   });
 
   /// Try to get a value from the cache by key.
@@ -35,7 +37,9 @@ abstract interface class IDynamicCache
   T getOrAddSync<T>(
     String key, {
     required T addValue,
+    bool autoRemove = true,
     Duration expiration = const Duration(seconds: 60),
+    bool listen = true,
   });
 
   /// Get a first (if there is more than one) value from the cache by type.

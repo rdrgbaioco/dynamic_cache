@@ -1,3 +1,7 @@
+#### 1.0.4
+
+* Small changes.
+
 #### 1.0.3
 
 * Update examples.
