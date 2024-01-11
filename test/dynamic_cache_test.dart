@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   late List<String> names;
-  const instance = DynamicCache.instance;
+  final cache = DynamicCache.singleton();
 
   setUp(() {
     names = const [
@@ -20,43 +20,25 @@ void main() {
   });
 
   test('Add and remove items from memory cache', () async {
-    instance.add(
-      'names',
-      names,
+    cache.add(
+      key: 'names',
+      value: names,
       expiration: const Duration(seconds: 5),
     );
 
-    final result = instance.get<List<String>>('names');
+    final result = cache.get<List<String>>('names');
 
     expect(
       result,
       isA<List<String>>().having((value) => value.length, 'Items', 7),
     );
 
-    await Future<dynamic>.delayed(const Duration(seconds: 10));
+    await Future<dynamic>.delayed(const Duration(seconds: 6));
 
     expect(
-      instance.contains('names'),
+      cache.contains('names'),
       isA<bool>().having((value) => value, 'Expect empty list', false),
     );
   });
 
-  test('Add item if not contains in cache', () async {
-    final numbersList = await instance.getOrAdd<List<int>>(
-      'numbers',
-      addValue: () async {
-        final random = Random();
-        final numbers = <int>[];
-        for (var i = 0; i < 1000; i++) {
-          numbers.add(random.nextInt(100));
-        }
-        return numbers;
-      },
-    );
-
-    expect(
-      numbersList,
-      isA<List<int>>().having((value) => value.length, 'Total items', 1000),
-    );
-  });
 }

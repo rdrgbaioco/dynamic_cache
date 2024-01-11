@@ -3,32 +3,57 @@ import 'package:dynamic_cache/dynamic_cache.dart';
 import 'package:image_picker/image_picker.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({
+    required this.cache,
+    super.key,
+  });
+
+  final DynamicCache cache;
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  /// Add a key/value pair to the cache.
-  void putToCache(XFile image) {
-    /// Check if the key is already in the cache
-    if (context.cache.contains('photoList')) {
-      final photos = <XFile?>[];
-      photos.add(image);
-      context.cache.add(
-        'photoList',
-        photos,
-        autoRemove: true,
-        expiration: const Duration(seconds: 30),
-      );
-    } else {
-      /// Add the image to the existing list on cache
-      context.cache.update<List<XFile?>>(
-        'photoList',
-        (current) => [...current, image],
-      );
-    }
+
+  void cache() {
+    widget.cache.add(
+        key: 'Names',
+        value: ['John', 'Jane', 'Jack', 'Jill', 'Jack', 'Annie', 'Bill'],
+        expiration: const Duration(seconds: 5),
+        onExpire: () async {
+          await showAdaptiveDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text('Alert!'),
+                content: const Text('Cache expired!'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      cache();
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Restart'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text('OK'),
+                  ),
+                ],
+              );
+            },
+          );
+        }
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    cache();
   }
 
   @override
@@ -41,47 +66,18 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            StreamBuilder<Map<String, dynamic>>(
-              stream: context.cache.stream,
-              initialData: const {},
-              builder: (context, snapshot) {
-                if (snapshot.requireData.isEmpty) {
-                  return const Text('No photos added yet, add some!');
-                }
 
-                return GridView.builder(
-                  shrinkWrap: true,
-                  itemCount: snapshot.requireData.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    mainAxisExtent: 60,
-                    mainAxisSpacing: 12,
-                  ),
-                  itemBuilder: (context, index) {
-                    return ViewPhoto(
-                      image: snapshot.fromCache('photoList')[index] as XFile,
-                    );
-                  },
-                );
-              },
-            ),
           ],
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final image = await PhotoPicker.pickImage();
-
-          if (image == null) {
-            return;
-          }
-
-          putToCache(image);
-        },
-        tooltip: 'Pick Photo',
-        child: const Icon(Icons.photo_library_rounded),
-      ),
+      // floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () async {
+      //
+      //   },
+      //   tooltip: 'Pick Photo',
+      //   child: const Icon(Icons.photo_library_rounded),
+      // ),
     );
   }
 }
